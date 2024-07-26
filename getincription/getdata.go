@@ -12,39 +12,56 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetData(txHash string) {
+type ReturnData struct {
+	ContentType     string `json:"contentType"`
+	TxInIndex       string `json:"txInIndex"`
+	TxInOffset      string `json:"txInOffset"`
+	ContentLength   string `json:"contentLength"`
+	InscriptionData string `json:"inscriptionData"`
+}
+
+func GetInscriptionDetails(txHash string) (ReturnData, error) {
+	var returnData ReturnData
 
 	rawTxHex, err := _getRawTransactionHex(txHash)
 	if err != nil {
 		log.Fatalf("Failed to fetch raw transaction hex: %v", err)
+		return returnData, err
 	}
 
 	rawTx, err := _decodeRawTransaction(rawTxHex)
 	if err != nil {
 		log.Fatalf("Failed to decode raw transaction: %v", err)
+		return returnData, err
 	}
 
 	transactionInscriptions := parser.ParseInscriptionsFromTransaction(rawTx)
 	if len(transactionInscriptions) == 0 {
 		log.Info("No inscriptions found.")
-	} else {
-		for _, ins := range transactionInscriptions {
-			contentType := string(ins.Inscription.ContentType)
-			log.Infof("Inscription found at index: %d, offset: %d, type: %s, length: %d",
-				ins.TxInIndex, ins.TxInOffset, contentType, ins.Inscription.ContentLength)
+		return returnData, nil
+	}
 
-			// Display the content of the inscription
-			if contentType == "text/plain;charset=utf-8" {
-				// Attempt to access the content field
-				data := ins.Inscription.ContentBody
-				if data != nil {
-					fmt.Printf("Inscription Content: %s\n", string(data))
-				} else {
-					log.Warn("Inscription data is nil.")
+	for _, ins := range transactionInscriptions {
+		contentType := string(ins.Inscription.ContentType)
+
+		if contentType == "text/plain;charset=utf-8" {
+			data := ins.Inscription.ContentBody
+			if data != nil {
+				returnData = ReturnData{
+					ContentType:     contentType,
+					TxInIndex:       fmt.Sprintf("%d", ins.TxInIndex),
+					TxInOffset:      fmt.Sprintf("%d", ins.TxInOffset),
+					ContentLength:   fmt.Sprintf("%d", ins.Inscription.ContentLength),
+					InscriptionData: string(data),
 				}
+				return returnData, nil
+			} else {
+				log.Warn("Inscription data is nil.")
 			}
 		}
 	}
+
+	return returnData, nil
 }
 
 func _getRawTransactionHex(txid string) (string, error) {

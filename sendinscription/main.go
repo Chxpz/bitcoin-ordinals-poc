@@ -1,4 +1,4 @@
-package sendinscription
+package createinscription
 
 import (
 	"bytes"
@@ -42,7 +42,7 @@ type LightningInvoice struct {
 	PayReq    string `json:"payreq"`
 }
 
-func Run() {
+func CreateInscription() {
 
 	data := "Hello, Ordinals!"
 	dataURL := "data:plain/text;base64," + base64.StdEncoding.EncodeToString([]byte(data))

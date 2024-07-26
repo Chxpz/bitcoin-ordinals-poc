@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/balletcrypto/bitcoin-inscription-parser v0.1.4
 	github.com/btcsuite/btcd v0.24.2
+	github.com/gorilla/mux v1.8.1
 	github.com/sirupsen/logrus v1.9.3
 )
 
